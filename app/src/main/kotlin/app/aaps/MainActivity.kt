@@ -69,6 +69,7 @@ import app.aaps.ui.activities.ProfileHelperActivity
 import app.aaps.ui.activities.StatsActivity
 import app.aaps.ui.activities.TreatmentsActivity
 import app.aaps.ui.tabs.TabPageAdapter
+import app.aaps.utils.AutoUpdateHelper
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayoutMediator
 import com.google.firebase.crashlytics.FirebaseCrashlytics
@@ -104,6 +105,7 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
 
     private lateinit var actionBarDrawerToggle: ActionBarDrawerToggle
     private var pluginPreferencesMenuItem: MenuItem? = null
+    private lateinit var autoUpdateHelper: AutoUpdateHelper
     private var menu: Menu? = null
     private var menuOpen = false
     private var isProtectionCheckActive = false
@@ -118,6 +120,8 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
+        
+        autoUpdateHelper = AutoUpdateHelper(this, uiInteraction, aapsSchedulers, fabricPrivacy)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setHomeButtonEnabled(true)
         actionBarDrawerToggle = ActionBarDrawerToggle(this, binding.mainDrawerLayout, R.string.open_navigation, R.string.close_navigation).also {
@@ -273,6 +277,8 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
         binding.splash.visibility = View.GONE
         setUserStats()
         setupViews()
+        
+        autoUpdateHelper.checkForUpdates()
 
         if (startWizard() && !isRunningRealPumpTest()) {
             protectionCheck.queryProtection(this, ProtectionCheck.Protection.PREFERENCES, {
@@ -343,6 +349,7 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
         binding.mainDrawerLayout.removeDrawerListener(actionBarDrawerToggle)
         mainMenuProvider?.let { removeMenuProvider(it) }
         disposable.clear()
+        autoUpdateHelper.dispose()
     }
 
     override fun onResume() {
